@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demospringbootkube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demospringbootkube
+  template:
+    metadata:
+      labels:
+        app: demospringbootkube
+    spec:
+      containers:
+        - name: demospringbootkube
+          image: us-central1-docker.pkg.dev/will-playground/imagerepo/demospringbootkube
+          imagePullPolicy: Always
+          env:
+            - name: GREETING_MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: demo-config
+                  key: greeting-message
+          ports:
+            - containerPort: 5000
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "1"
+              memory: 1G
+            requests:
+              cpu: 100m
+              memory: 100M
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demospringbootkube
+spec:
+  selector:
+    app: demospringbootkube
+  type: LoadBalancer
+  ports:
+    - port: 8080
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grpc-load-balancer
+  labels:
+    app: demospringbootkube
+spec:
+  ports:
+    - port: 5000
+      targetPort: 9090
+  selector:
+    app: demospringbootkube
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: demo-config
+data:
+  greeting-message: hello from config map!
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: demo-monitor
+  namespace: default
+  labels:
+    prometheus: devops
+spec:
+  endpoints:
+    - port: loadbalancer-port
+      interval: 15s
+      path: /actuator/prometheus
+  namespaceSelector:
+    matchNames:
+      - default
+  selector:
+    matchLabels:
+      app: demospringbootkube

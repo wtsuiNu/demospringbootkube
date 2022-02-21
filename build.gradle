@@ -1,0 +1,60 @@
+plugins {
+    id 'org.springframework.boot' version '2.6.3'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'java'
+    id 'com.google.cloud.tools.jib' version '3.2.0'
+    id "com.google.protobuf" version "0.8.18"
+}
+
+group = 'com.nuvalence'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+configurations {
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'io.grpc:grpc-stub:1.35.1'
+    implementation 'io.grpc:grpc-protobuf:1.35.1'
+
+    implementation 'net.devh:grpc-server-spring-boot-starter:2.12.0.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator:2.5.8'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.7.7'
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2020.0.4"
+    }
+}
+tasks.named('test') {
+    useJUnitPlatform()
+}
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.14.0:windows-x86_64"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:1.35.0:windows-x86_64"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+

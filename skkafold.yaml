@@ -1,0 +1,11 @@
+apiVersion: skaffold/v2beta25
+kind: Config
+build:
+  artifacts:
+    - image: us-central1-docker.pkg.dev/will-playground/imagerepo/demospringbootkube
+      jib: {}
+  local: {}
+deploy:
+  kubectl:
+    manifests:
+      - deployment.yaml
